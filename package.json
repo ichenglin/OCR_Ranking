@@ -1,0 +1,17 @@
+{
+  "name": "flagwars_ranking",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Icheng Lin",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "canvas": "^3.1.0",
+    "discord.js": "^14.19.3",
+    "dotenv": "^16.5.0",
+    "tesseract.js": "^6.0.1"
+  }
+}
