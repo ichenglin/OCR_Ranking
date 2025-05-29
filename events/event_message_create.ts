@@ -1,5 +1,4 @@
 import { EmbedBuilder, Events, Message } from "discord.js";
-import Logger from "../objects/logger";
 import VerificationEvent from "../templates/template_event";
 import { ImageManager } from "../managers/manager_image";
 import { RecognitionManager } from "../managers/manager_recognition";
@@ -35,14 +34,13 @@ export default class MessageCreateEvent extends VerificationEvent {
                 },
                 {
                     name: `:red_square: Team Red (Score: ${round_result.score_red})`,
-                    value: round_result.players_red.map(team_player => `\`${team_player}\``).join("\n")
+                    value: round_result.players_red.map(team_player => `${team_player.player_bot ? "(BOT) " : ""}\`${team_player.player_username}\`: Score \`${team_player.player_score}\` Kills \`${team_player.player_kills}\` Deaths \`${team_player.player_deaths}\``).join("\n")
                 },
                 {
                     name: `:blue_square: Team Blue (Score: ${round_result.score_blue})`,
-                    value: round_result.players_blue.map(team_player => `\`${team_player}\``).join("\n")
+                    value: round_result.players_blue.map(team_player => `${team_player.player_bot ? "(BOT) " : ""}\`${team_player.player_username}\`: Score \`${team_player.player_score}\` Kills \`${team_player.player_kills}\` Deaths \`${team_player.player_deaths}\``).join("\n")
                 }
             ])
-            //.setThumbnail(image_url)
             .setImage(image_url)
             .setTimestamp()
             .setFooter({text: `requested by ${message.author.tag}`, iconURL: message.client.user.displayAvatarURL()})

@@ -1,6 +1,6 @@
 import { ActivityType, Client, ClientUser, GatewayIntentBits, REST, Routes } from "discord.js";
 import * as dotenv from "dotenv";
-import Registry from "./objects/registry";
+import Registry from "./objects/object_registry";
 import MessageCreateEvent from "./events/event_message_create";
 
 dotenv.config();

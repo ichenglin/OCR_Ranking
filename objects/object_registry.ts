@@ -5,7 +5,6 @@ import VerificationEvent from "../templates/template_event";
 import VerificationModal from "../templates/template_modal";
 
 export default class Registry {
-
     private registered_events:   Map<string, VerificationEvent>;
     private registered_commands: Map<string, VerificationCommand>;
     private registered_buttons:  Map<string, VerificationButton>;
@@ -47,5 +46,4 @@ export default class Registry {
     public async modal_trigger(modal_interaction: ModalSubmitInteraction): Promise<void> {
         await this.registered_modals.get(modal_interaction.customId)?.modal_trigger(modal_interaction);
     }
-
 }

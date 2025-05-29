@@ -4,12 +4,18 @@ import { ImageArea, ImageBounds } from "./manager_image";
 export class RecognitionManager {
 
     public async recognize_image(recognition_image: Buffer, recognition_bounds: ImageBounds): Promise<RecognitionResult> {
-        const recognition_worker               = await createWorker("eng");
+        const recognition_worker = await createWorker("eng");
+        // read scoreboard
+        await recognition_worker.setParameters({tessedit_char_whitelist: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_()"});
         const recognition_data_scoreboard_red  = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_scoreboard_red)});
         const recognition_data_scoreboard_blue = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_scoreboard_blue)});
-        const recognition_data_timer           = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_timer)});
-        const recognition_data_score_red       = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_score_red)});
-        const recognition_data_score_blue      = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_score_blue)});
+        // read timer
+        await recognition_worker.setParameters({tessedit_char_whitelist: "0123456789:"});
+        const recognition_data_timer = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_timer)});
+        // read score
+        await recognition_worker.setParameters({tessedit_char_whitelist: "0123456789"});
+        const recognition_data_score_red  = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_score_red)});
+        const recognition_data_score_blue = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_score_blue)});
         return {
             round_timer:  this.recognize_timer  (recognition_data_timer          .data.text),
             score_red:    this.recognize_score  (recognition_data_score_red      .data.text),
@@ -33,8 +39,21 @@ export class RecognitionManager {
         return parseInt(score_digits[1]);
     }
 
-    private recognize_players(recognition_scoreboard: string): string[] {
-        return recognition_scoreboard.split("\n").slice(1).map(line_text => line_text.match(/^(\w+) \(/)).filter(line_match => (line_match !== null)).map(line_match => line_match[1]);
+    private recognize_players(recognition_scoreboard: string): RecognitionPlayer[] {
+        return recognition_scoreboard.split("\n").slice(1).map(line_text => line_text.match(/^(\w+)\([^\d]*(\d+)\)\s(\d+)\s(\d+)\s(\d+)\s(\d+)$/)).filter(line_match => (line_match !== null)).map(line_match => {
+            const player_username = line_match[1];
+            const player_level    = parseInt(line_match[2]);
+            const player_match    = (player_username.match(/^[a-zA-Z0-9]+_[a-zA-Z0-9]+\d{4}$/) !== null);
+            return {
+                player_username: player_username,
+                player_level:    player_level,
+                player_score:    parseInt(line_match[3]),
+                player_kills:    parseInt(line_match[4]),
+                player_deaths:   parseInt(line_match[5]),
+                player_streak:   parseInt(line_match[6]),
+                player_bot:      (player_match && (player_level < 20))
+            } as RecognitionPlayer;
+        });
     }
 
     private convert_rectangle(image_area: ImageArea): Tesseract.Rectangle {
@@ -51,6 +70,16 @@ export type RecognitionResult = {
     round_timer:  number,
     score_red:    number,
     score_blue:   number,
-    players_red:  string[],
-    players_blue: string[]
-}
+    players_red:  RecognitionPlayer[],
+    players_blue: RecognitionPlayer[]
+};
+
+export type RecognitionPlayer = {
+    player_username: string,
+    player_level:    number,
+    player_score:    number,
+    player_kills:    number,
+    player_deaths:   number,
+    player_streak:   number,
+    player_bot:      boolean
+};
