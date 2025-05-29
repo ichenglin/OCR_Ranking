@@ -43,7 +43,7 @@ export class RecognitionManager {
         return recognition_scoreboard.split("\n").slice(1).map(line_text => line_text.match(/^(\w+)\([^\d]*(\d+)\)\s(\d+)\s(\d+)\s(\d+)\s(\d+)$/)).filter(line_match => (line_match !== null)).map(line_match => {
             const player_username = line_match[1];
             const player_level    = parseInt(line_match[2]);
-            const player_match    = (player_username.match(/^[a-zA-Z0-9]+_[a-zA-Z0-9]+\d{4}$/) !== null);
+            const player_match    = (player_username.match(/^[a-zA-Z\d]+_[a-zA-Z\d]+\d{4}$/) !== null);
             return {
                 player_username: player_username,
                 player_level:    player_level,
