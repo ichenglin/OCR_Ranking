@@ -89,7 +89,7 @@ export class ImageManager {
         } as ImageLocation;
         const score_blue_left  = PixelSearcher.search_unmatch(this.image_canvas, score_blue_ceil, PixelSearcherDirection.SEARCH_LEFT) .pixel_origin().location_x;
         const score_blue_right = PixelSearcher.search_unmatch(this.image_canvas, score_blue_ceil, PixelSearcherDirection.SEARCH_RIGHT).pixel_origin().location_x;
-        return {
+        const image_bounds_raw = {
             image_players_red: {
                 origin:      {location_x: scoreboard_left,    location_y: scoreboard_top}    as ImageLocation,
                 destination: {location_x: image_width_center, location_y: scoreboard_center} as ImageLocation
@@ -117,8 +117,19 @@ export class ImageManager {
             image_score_blue: {
                 origin:      {location_x: score_blue_left,  location_y: timer_top}    as ImageLocation,
                 destination: {location_x: score_blue_right, location_y: timer_bottom} as ImageLocation
-            }
+            },
+            image_valid: undefined as unknown
         } as ImageBounds;
+        const image_bounds_valid = ([
+            this.area_valid(image_bounds_raw.image_players_red),
+            this.area_valid(image_bounds_raw.image_players_blue),
+            this.area_valid(image_bounds_raw.image_scoreboard_red),
+            this.area_valid(image_bounds_raw.image_scoreboard_blue),
+            this.area_valid(image_bounds_raw.image_timer),
+            this.area_valid(image_bounds_raw.image_score_red),
+            this.area_valid(image_bounds_raw.image_score_blue)
+        ].filter(requirement => (!requirement)).length <= 0);
+        return Object.assign(image_bounds_raw, {image_valid: image_bounds_valid});
     }
 
     public image_grayscale(): Buffer {
@@ -142,6 +153,12 @@ export class ImageManager {
         grayscale_context.putImageData(grayscale_data, 0, 0);
         return grayscale_canvas.toBuffer();
     }
+
+    private area_valid(image_area: ImageArea): boolean {
+        const x_difference = (image_area.destination.location_x - image_area.origin.location_x);
+        const y_difference = (image_area.destination.location_y - image_area.origin.location_y);
+        return ((x_difference > 0) && (y_difference > 0));
+    }
 }
 
 export type ImageBounds = {
@@ -151,7 +168,8 @@ export type ImageBounds = {
     image_players_red:     ImageArea,
     image_players_blue:    ImageArea,
     image_scoreboard_red:  ImageArea,
-    image_scoreboard_blue: ImageArea
+    image_scoreboard_blue: ImageArea,
+    image_valid:           boolean
 };
 
 export type ImageArea = {

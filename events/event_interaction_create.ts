@@ -1,0 +1,36 @@
+import { BaseInteraction, ChatInputCommandInteraction, EmbedBuilder, Events, InteractionType } from "discord.js";
+import Logger from "../objects/object_logger";
+import VerificationEvent from "../templates/template_event";
+import Backend from "..";
+
+export default class InteractionCreateEvent extends VerificationEvent {
+
+    public event_configuration(): {name: string} {
+        return {
+            name: Events.InteractionCreate
+        };
+    }
+
+    public async event_trigger(interaction: BaseInteraction): Promise<void> {
+        try {
+            Logger.send_log(`Event received in ${Date.now() - interaction.createdTimestamp} ms.`);
+            if      (interaction.isChatInputCommand()) await Backend.server_registry.command_trigger(interaction);
+            else if (interaction.isButton())           await Backend.server_registry.button_trigger(interaction);
+            else if (interaction.isModalSubmit())      await Backend.server_registry.modal_trigger(interaction);
+            Logger.send_log(`Event processed in ${Date.now() - interaction.createdTimestamp} ms.`);
+        } catch (error) {
+            Logger.send_log(`\nAn error has occured in event triggers. (Type=${InteractionType[interaction.type]})`);
+            Logger.send_log(`\n${(error as Error).message}\n`);
+            if (interaction.type !== InteractionType.ApplicationCommand) return;
+            // report command error
+            const interaction_element = (interaction as ChatInputCommandInteraction);
+            const failure_embed       = new EmbedBuilder()
+                .setTitle("⚠️ Failure ⚠️")
+                .setDescription(`An unknown error has occured while peforming the operation, please try again later.`)
+                .setColor("#f97316");
+            if (interaction_element.deferred) await interaction_element.editReply({embeds: [failure_embed]});
+            else                              await interaction_element.reply(    {embeds: [failure_embed]});
+        }
+    }
+
+}

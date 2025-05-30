@@ -19,26 +19,40 @@ export class RecognitionManager {
         await recognition_worker.setParameters({tessedit_char_whitelist: "0123456789"});
         const recognition_data_score_red  = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_score_red)});
         const recognition_data_score_blue = await recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_score_blue)});
+        // raw results
+        const round_timer  = this.recognize_timer  (recognition_data_timer       .data.text);
+        const score_red    = this.recognize_score  (recognition_data_score_red   .data.text);
+        const score_blue   = this.recognize_score  (recognition_data_score_blue  .data.text);
+        const players_red  = this.recognize_players(recognition_data_players_red .data.text, recognition_data_scoreboard_red .data.text);
+        const players_blue = this.recognize_players(recognition_data_players_blue.data.text, recognition_data_scoreboard_blue.data.text);
+        const round_valid  = ([
+            (round_timer         !== null),
+            (score_red           !== null),
+            (score_blue          !== null),
+            (players_red .length >   0),
+            (players_blue.length >   0)
+        ].filter(requirement => (!requirement)).length <= 0);
         return {
-            round_timer:  this.recognize_timer  (recognition_data_timer       .data.text),
-            score_red:    this.recognize_score  (recognition_data_score_red   .data.text),
-            score_blue:   this.recognize_score  (recognition_data_score_blue  .data.text),
-            players_red:  this.recognize_players(recognition_data_players_red .data.text, recognition_data_scoreboard_red .data.text),
-            players_blue: this.recognize_players(recognition_data_players_blue.data.text, recognition_data_scoreboard_blue.data.text)
-        }
+            round_timer:  (round_valid ? round_timer : 0) as number,
+            score_red:    (round_valid ? score_red   : 0) as number,
+            score_blue:   (round_valid ? score_blue  : 0) as number,
+            players_red:  players_red,
+            players_blue: players_blue,
+            round_valid:  round_valid
+        };
     }
 
-    private recognize_timer(recognition_timer: string): number {
+    private recognize_timer(recognition_timer: string): (number | null) {
         const timer_digits = recognition_timer.match(/(\d{1,2}):(\d{1,2})/);
-        if (timer_digits === null) return 0;
+        if (timer_digits === null) return null;
         const timer_minutes = parseInt(timer_digits[1]);
         const timer_seconds = parseInt(timer_digits[2]);
         return ((timer_minutes * 60) + timer_seconds);
     }
 
-    private recognize_score(recognition_score: string): number {
+    private recognize_score(recognition_score: string): (number | null) {
         const score_digits = recognition_score.match(/(\d+)/);
-        if (score_digits === null) return 0;
+        if (score_digits === null) return null;
         return parseInt(score_digits[1]);
     }
 
@@ -79,7 +93,8 @@ export type RecognitionResult = {
     score_red:    number,
     score_blue:   number,
     players_red:  RecognitionPlayer[],
-    players_blue: RecognitionPlayer[]
+    players_blue: RecognitionPlayer[],
+    round_valid:  boolean
 };
 
 export type RecognitionPlayer = {
