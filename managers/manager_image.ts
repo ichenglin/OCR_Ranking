@@ -90,13 +90,21 @@ export class ImageManager {
         const score_blue_left  = PixelSearcher.search_unmatch(this.image_canvas, score_blue_ceil, PixelSearcherDirection.SEARCH_LEFT) .pixel_origin().location_x;
         const score_blue_right = PixelSearcher.search_unmatch(this.image_canvas, score_blue_ceil, PixelSearcherDirection.SEARCH_RIGHT).pixel_origin().location_x;
         return {
+            image_players_red: {
+                origin:      {location_x: scoreboard_left,    location_y: scoreboard_top}    as ImageLocation,
+                destination: {location_x: image_width_center, location_y: scoreboard_center} as ImageLocation
+            },
+            image_players_blue: {
+                origin:      {location_x: scoreboard_left,    location_y: scoreboard_center} as ImageLocation,
+                destination: {location_x: image_width_center, location_y: scoreboard_bottom} as ImageLocation
+            },
             image_scoreboard_red: {
-                origin:      {location_x: scoreboard_left,  location_y: scoreboard_top}    as ImageLocation,
-                destination: {location_x: scoreboard_right, location_y: scoreboard_center} as ImageLocation
+                origin:      {location_x: image_width_center, location_y: scoreboard_top}    as ImageLocation,
+                destination: {location_x: scoreboard_right,   location_y: scoreboard_center} as ImageLocation
             },
             image_scoreboard_blue: {
-                origin:      {location_x: scoreboard_left,  location_y: scoreboard_center} as ImageLocation,
-                destination: {location_x: scoreboard_right, location_y: scoreboard_bottom} as ImageLocation
+                origin:      {location_x: image_width_center, location_y: scoreboard_center} as ImageLocation,
+                destination: {location_x: scoreboard_right,   location_y: scoreboard_bottom} as ImageLocation
             },
             image_timer: {
                 origin:      {location_x: timer_left,  location_y: timer_top}    as ImageLocation,
@@ -122,9 +130,10 @@ export class ImageManager {
             const pixel_blue  = grayscale_data.data[(pixel_index * 4) + 2];
             // relative luminance
             const pixel_luminance = Math.floor((pixel_red * 0.2126) + (pixel_green * 0.7152) + (pixel_blue * 0.0722));
-            grayscale_data.data[(pixel_index * 4) + 0] = pixel_luminance;
-            grayscale_data.data[(pixel_index * 4) + 1] = pixel_luminance;
-            grayscale_data.data[(pixel_index * 4) + 2] = pixel_luminance;
+            const pixel_binary    = ((pixel_luminance >= 64) ? 255 : 0);
+            grayscale_data.data[(pixel_index * 4) + 0] = pixel_binary;
+            grayscale_data.data[(pixel_index * 4) + 1] = pixel_binary;
+            grayscale_data.data[(pixel_index * 4) + 2] = pixel_binary;
         }
         // create canvas copy
         const grayscale_canvas  = createCanvas(this.image_canvas.width, this.image_canvas.height);
@@ -139,6 +148,8 @@ export type ImageBounds = {
     image_timer:           ImageArea,
     image_score_red:       ImageArea,
     image_score_blue:      ImageArea,
+    image_players_red:     ImageArea,
+    image_players_blue:    ImageArea,
     image_scoreboard_red:  ImageArea,
     image_scoreboard_blue: ImageArea
 };

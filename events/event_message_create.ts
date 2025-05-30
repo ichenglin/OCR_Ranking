@@ -27,17 +27,30 @@ export default class MessageCreateEvent extends VerificationEvent {
         const round_rating = await RatingManager.rating_update(round_result);
         // respond
         const rank_embed = new EmbedBuilder()
-            .setTitle("Ranking Prototype")
-            .setDescription("In Progress. WIP.")
+            .setTitle("Rating Update")
+            .setDescription("**NOTE:** Player score and KDR are experimental features and not taken into account for one's rating.")
             .addFields([
                 {
                     name: "⌛ Round Information",
                     value: [
                         `<:dot_blue:1377733347677306980> Timer: \`${this.round_timer(round_result.round_timer)}\``,
+                        `<:dot_blue:1377733347677306980> Red Score: \`${round_result.score_red} pts\` ${(round_result.score_red > round_result.score_blue) ? "(🏅)" : ""}`,
+                        `<:dot_blue:1377733347677306980> Blue Score: \`${round_result.score_blue} pts\` ${(round_result.score_red < round_result.score_blue) ? "(🏅)" : ""}`
+                    ].join("\n"),
+                    inline: true
+                },
+                {
+                    name: "🎯 Round Likelihood",
+                    value: [
                         `<:dot_blue:1377733347677306980> Draw: \`${(round_rating.probability.draw * 100).toFixed(1)}%\` (Quality)`,
                         `<:dot_blue:1377733347677306980> Red Win: \`${(round_rating.probability.win_red * 100).toFixed(1)}%\``,
                         `<:dot_blue:1377733347677306980> Blue Win: \`${(round_rating.probability.win_blue * 100).toFixed(1)}%\``
-                    ].join("\n")
+                    ].join("\n"),
+                    inline: true
+                },
+                {
+                    name: "",
+                    value: ""
                 },
                 {
                     name: "🟥 Team Red",
@@ -66,15 +79,16 @@ export default class MessageCreateEvent extends VerificationEvent {
         const player_rating_old   = player_rating.player_rating_old.mu;
         const player_rating_new   = player_rating.player_rating_new.mu;
         let   player_rating_trend = "";
-        if      (player_stats.player_bot)               player_rating_trend = "(🤖)";
-        else if (player_rating_new > player_rating_old) player_rating_trend = "(🔺)";
+             if (player_rating_new > player_rating_old) player_rating_trend = "(🔺)";
         else if (player_rating_new < player_rating_old) player_rating_trend = "(🔻)";
         // player kdr
         const player_kdr = ((player_stats.player_deaths > 0) ? (player_stats.player_kills / player_stats.player_deaths) : player_stats.player_kills);
         return [
-            `🪖 **${player_stats.player_username}**`,
-            `<:dot_blue:1377733347677306980> Rating: \`${player_rating_old.toFixed(1)}\` ➤ \`${player_rating_new.toFixed(1)}\` ${player_rating_trend}`,
+            player_stats.player_bot || `🪖 **${player_stats.player_username}**`,
+            player_stats.player_bot && `🤖 **${player_stats.player_username}**`,
+            player_stats.player_bot || `<:dot_blue:1377733347677306980> Rating: \`${player_rating_old.toFixed(1)}\` ➤ \`${player_rating_new.toFixed(1)}\` ${player_rating_trend}`,
+            player_stats.player_bot && `<:dot_blue:1377733347677306980> Rating: \`Not Updated\` (**NPC**)`,
             `<:dot_blue:1377733347677306980> Score: \`${player_stats.player_score}\` KDR: \`${player_kdr.toFixed(1)}\``
-        ].join("\n");
+        ].filter(summary_line => ((typeof summary_line) === "string")).join("\n");
     }
 }
