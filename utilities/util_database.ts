@@ -11,6 +11,7 @@ const DatabasePlayerSchema = new Backend.server_database.Schema({
     key:      {type: String,               required: true},
     level:    {type: Number,               required: true},
     rating:   {type: DatabaseRatingSchema, required: true},
+    updates:  {type: Number,               required: true},
     updated:  {type: Date,                 required: true}
 });
 
@@ -33,6 +34,8 @@ export async function set_player(player_username: string, player_level: number, 
             sigma: player_rating.sigma
         },
         updated: new Date()
+    }, $inc: {
+        updates: 1
     }}, {
         upsert: true,
         new:    true,

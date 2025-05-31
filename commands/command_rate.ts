@@ -5,6 +5,7 @@ import {  RecognitionPlayer } from "../managers/manager_recognition";
 import { RatingManager, RatingPlayer } from "../managers/manager_rating";
 import Backend from "..";
 import { expose } from "ts-trueskill";
+import { string_limit } from "../utilities/util_render";
 
 export default class RateCommand extends VerificationCommand {
 
@@ -136,10 +137,11 @@ export default class RateCommand extends VerificationCommand {
              if (player_rating_new > player_rating_old) player_rating_trend = "(🔺)";
         else if (player_rating_new < player_rating_old) player_rating_trend = "(🔻)";
         // player kdr
-        const player_kdr = ((player_stats.player_deaths > 0) ? (player_stats.player_kills / player_stats.player_deaths) : player_stats.player_kills);
+        const player_display = string_limit(player_stats.player_username, 12, "…")
+        const player_kdr     = ((player_stats.player_deaths > 0) ? (player_stats.player_kills / player_stats.player_deaths) : player_stats.player_kills);
         return [
-            player_stats.player_bot || `🪖 **${player_stats.player_username}**`,
-            player_stats.player_bot && `🤖 **${player_stats.player_username}**`,
+            player_stats.player_bot || `🪖 **${player_display}**`,
+            player_stats.player_bot && `🤖 **${player_display}**`,
             player_stats.player_bot || `<:dot_blue:1377733347677306980> Rating: \`${player_rating_old.toFixed(2)}\` ➤ \`${player_rating_new.toFixed(2)}\` ${player_rating_trend}`,
             player_stats.player_bot && `<:dot_blue:1377733347677306980> Rating: \`Not Updated\` (**NPC**)`,
             `<:dot_blue:1377733347677306980> Score: \`${player_stats.player_score}\` KDR: \`${player_kdr.toFixed(1)}\``

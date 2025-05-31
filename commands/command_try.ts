@@ -2,7 +2,7 @@ import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "
 import VerificationCommand from "../templates/template_command";
 import { RatingManager } from "../managers/manager_rating";
 import { RecognitionPlayer, RecognitionResult } from "../managers/manager_recognition";
-import { string_join } from "../utilities/util_render";
+import { string_join, string_limit } from "../utilities/util_render";
 
 export default class TryCommand extends VerificationCommand {
 
@@ -53,8 +53,8 @@ export default class TryCommand extends VerificationCommand {
             players_blue: TryCommand.convert_dummy(players_blue),
             round_valid:  false
         } as RecognitionResult);
-        const usernames_red  = string_join(round_likelihood.players_red .map(player_data => `\`${player_data.username}\`${(!player_data.valid) ? " (⚠️ No Data)" : ""}`));
-        const usernames_blue = string_join(round_likelihood.players_blue.map(player_data => `\`${player_data.username}\`${(!player_data.valid) ? " (⚠️ No Data)" : ""}`));
+        const usernames_red  = string_join(round_likelihood.players_red .map(player_data => `\`${string_limit(player_data.username, 20, "…")}\`${(!player_data.valid) ? " (⚠️ No Data)" : ""}`));
+        const usernames_blue = string_join(round_likelihood.players_blue.map(player_data => `\`${string_limit(player_data.username, 20, "…")}\`${(!player_data.valid) ? " (⚠️ No Data)" : ""}`));
         await command_interaction.editReply([
             `Quality: \`${(round_likelihood.quality * 100).toFixed(1)}%\``,
             `Red Win: \`${(round_likelihood.win_red * 100).toFixed(1)}%\` [${usernames_red}]`,

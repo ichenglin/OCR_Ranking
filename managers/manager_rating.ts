@@ -52,6 +52,7 @@ export class RatingManager {
                 key:      round_username.toLowerCase(),
                 level:    0,
                 rating:   new Rating(),
+                updates:  0,
                 updated:  new Date(),
                 valid:    false
             });
