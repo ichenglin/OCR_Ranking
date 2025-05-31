@@ -4,6 +4,7 @@ import { ImageManager } from "../managers/manager_image";
 import {  RecognitionPlayer } from "../managers/manager_recognition";
 import { RatingManager, RatingPlayer } from "../managers/manager_rating";
 import Backend from "..";
+import { expose } from "ts-trueskill";
 
 export default class RateCommand extends VerificationCommand {
 
@@ -129,8 +130,8 @@ export default class RateCommand extends VerificationCommand {
 
     private player_summary(player_stats: RecognitionPlayer, player_rating: RatingPlayer): string {
         // player rating trend
-        const player_rating_old   = player_rating.player_rating_old.mu;
-        const player_rating_new   = player_rating.player_rating_new.mu;
+        const player_rating_old   = expose(player_rating.player_rating_old);
+        const player_rating_new   = expose(player_rating.player_rating_new);
         let   player_rating_trend = "";
              if (player_rating_new > player_rating_old) player_rating_trend = "(🔺)";
         else if (player_rating_new < player_rating_old) player_rating_trend = "(🔻)";
@@ -139,7 +140,7 @@ export default class RateCommand extends VerificationCommand {
         return [
             player_stats.player_bot || `🪖 **${player_stats.player_username}**`,
             player_stats.player_bot && `🤖 **${player_stats.player_username}**`,
-            player_stats.player_bot || `<:dot_blue:1377733347677306980> Rating: \`${player_rating_old.toFixed(1)}\` ➤ \`${player_rating_new.toFixed(1)}\` ${player_rating_trend}`,
+            player_stats.player_bot || `<:dot_blue:1377733347677306980> Rating: \`${player_rating_old.toFixed(2)}\` ➤ \`${player_rating_new.toFixed(2)}\` ${player_rating_trend}`,
             player_stats.player_bot && `<:dot_blue:1377733347677306980> Rating: \`Not Updated\` (**NPC**)`,
             `<:dot_blue:1377733347677306980> Score: \`${player_stats.player_score}\` KDR: \`${player_kdr.toFixed(1)}\``
         ].filter(summary_line => ((typeof summary_line) === "string")).join("\n");

@@ -38,10 +38,7 @@ export async function set_player(player_username: string, player_level: number, 
         new:    true,
         projection: {_id: 0, __v: 0}
     })) as InferSchemaType<typeof DatabasePlayerSchema>;
-    (player_object as DatabasePlayer).rating  = new Rating(player_object.rating.mu, player_object.rating.sigma);
-    (player_object as DatabasePlayer).updated = new Date(player_object.updated);
-    (player_object as DatabasePlayer).valid   = true;
-    return player_object as DatabasePlayer;
+    return convert_player(player_object);
 }
 
 export async function get_player(player_username: string): Promise<DatabasePlayer | null> {
@@ -51,10 +48,15 @@ export async function get_player(player_username: string): Promise<DatabasePlaye
         projection: {_id: 0, __v: 0}
     })) as (InferSchemaType<typeof DatabasePlayerSchema> | null);
     if (player_object === null) return null;
-    (player_object as DatabasePlayer).rating  = new Rating(player_object.rating.mu, player_object.rating.sigma);
-    (player_object as DatabasePlayer).updated = new Date(player_object.updated);
-    (player_object as DatabasePlayer).valid   = true;
-    return player_object as DatabasePlayer;
+    return convert_player(player_object);
+}
+
+function convert_player(player_object: InferSchemaType<typeof DatabasePlayerSchema>): DatabasePlayer {
+    const player_data = Object.assign({}, player_object) as InferSchemaType<typeof DatabasePlayerSchema>;
+    (player_data as DatabasePlayer).rating  = new Rating(player_data.rating.mu, player_data.rating.sigma);
+    (player_data as DatabasePlayer).updated = new Date(player_data.updated);
+    (player_data as DatabasePlayer).valid   = true;
+    return (player_data as DatabasePlayer);
 }
 
 function get_serialized<DatabaseContent>(database_content: DatabaseContent): DatabaseContent {
