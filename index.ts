@@ -2,8 +2,9 @@ import { ActivityType, Client, ClientUser, GatewayIntentBits, REST, Routes } fro
 import * as Mongoose from "mongoose";
 import * as dotenv from "dotenv";
 import Registry from "./objects/object_registry";
-import RateCommand from "./commands/command_rate";
 import InteractionCreateEvent from "./events/event_interaction_create";
+import { RecognitionManager } from "./managers/manager_recognition";
+import Logger from "./objects/object_logger";
 
 dotenv.config();
 
@@ -15,7 +16,8 @@ const Backend = {
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
-    ]})
+    ]}),
+    server_worker:   new RecognitionManager()
 };
 
 (async () => {
@@ -28,7 +30,8 @@ const Backend = {
     // registry
     Backend.server_registry.register([
         new InteractionCreateEvent(),
-        new (await import("./commands/command_rate")).default()
+        new (await import("./commands/command_rate")).default(),
+        new (await import("./commands/command_try")).default()
     ]);
     // hook signatures
     for (const event_signature of Backend.server_registry.event_signatures()) Backend.server_client.on(event_signature.event_configuration().name, async (...args) => await event_signature.event_trigger(...args));
@@ -43,6 +46,15 @@ const Backend = {
             type: ActivityType.Playing,
         }]
     });
+    // worker
+    await Backend.server_worker.recognition_init();
+    Logger.send_log("Server initialization completed.");
 })();
+
+process.on("SIGINT", async () => {
+    Logger.send_log("Server shutting down.");
+    await Backend.server_worker.recognition_close();
+    process.exit(0);
+});
 
 export default Backend;

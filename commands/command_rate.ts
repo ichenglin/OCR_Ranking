@@ -1,8 +1,9 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import VerificationCommand from "../templates/template_command";
 import { ImageManager } from "../managers/manager_image";
-import { RecognitionManager, RecognitionPlayer } from "../managers/manager_recognition";
+import {  RecognitionPlayer } from "../managers/manager_recognition";
 import { RatingManager, RatingPlayer } from "../managers/manager_rating";
+import Backend from "..";
 
 export default class RateCommand extends VerificationCommand {
 
@@ -36,8 +37,7 @@ export default class RateCommand extends VerificationCommand {
             return;
         }
         // read stats from image
-        const manager_image       = new ImageManager();
-        const manager_recognition = new RecognitionManager();
+        const manager_image = new ImageManager();
         await manager_image.image_load(image_url);
         const round_bounds = manager_image.image_locate();
         if (!round_bounds.image_valid) {
@@ -52,7 +52,7 @@ export default class RateCommand extends VerificationCommand {
             await command_interaction.editReply({embeds: [invalid_embed]});
             return;
         }
-        const round_result = await manager_recognition.recognize_image(manager_image.image_grayscale(), round_bounds);
+        const round_result = await Backend.server_worker.recognize_image(manager_image.image_grayscale(), round_bounds);
         if (!round_result.round_valid) {
             // invalid screenshot
             const invalid_embed = new EmbedBuilder()
@@ -65,11 +65,11 @@ export default class RateCommand extends VerificationCommand {
             await command_interaction.editReply({embeds: [invalid_embed]});
             return;
         }
-        if (round_result.round_timer > 5) {
+        if (round_result.round_timer > 10) {
             // invalid timer
             const invalid_embed = new EmbedBuilder()
                 .setTitle("⛔ Invalid Screenshot ⛔")
-                .setDescription("The screenshot must be taken with **under 5 seconds left** on the **round timer**!")
+                .setDescription("The screenshot must be taken with **under 10 seconds left** on the **round timer**!")
                 .setImage(image_url)
                 .setTimestamp()
                 .setFooter({text: `requested by ${command_interaction.user.tag}`, iconURL: command_interaction.client.user.displayAvatarURL()})
@@ -95,7 +95,7 @@ export default class RateCommand extends VerificationCommand {
                 {
                     name: "🎯 Round Likelihood",
                     value: [
-                        `<:dot_blue:1377733347677306980> Draw: \`${(round_rating.probability.draw * 100).toFixed(1)}%\` (Quality)`,
+                        `<:dot_blue:1377733347677306980> Quality: \`${(round_rating.probability.quality * 100).toFixed(1)}%\``,
                         `<:dot_blue:1377733347677306980> Red Win: \`${(round_rating.probability.win_red * 100).toFixed(1)}%\``,
                         `<:dot_blue:1377733347677306980> Blue Win: \`${(round_rating.probability.win_blue * 100).toFixed(1)}%\``
                     ].join("\n"),
