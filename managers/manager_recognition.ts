@@ -1,5 +1,5 @@
 import Tesseract, { createWorker } from "tesseract.js";
-import { ImageArea, ImageBounds } from "./manager_image";
+import { ImageArea, ImageBounds, ImageManager } from "./manager_image";
 
 export class RecognitionManager {
     private recognition_worker: Tesseract.Worker;
@@ -17,21 +17,23 @@ export class RecognitionManager {
         this.recognition_worker = (undefined as any);
     }
 
-    public async recognize_image(recognition_image: Buffer, recognition_bounds: ImageBounds): Promise<RecognitionResult> {
+    public async recognize_image(recognition_image: ImageManager, recognition_bounds: ImageBounds): Promise<RecognitionResult> {
+        const grayscale_240 = recognition_image.image_grayscale(240);
+        const grayscale_64  = recognition_image.image_grayscale(64);
         // read scoreboard
         await this.recognition_worker.setParameters({tessedit_char_whitelist: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_()"});
-        const recognition_data_players_red  = await this.recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_players_red)});
-        const recognition_data_players_blue = await this.recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_players_blue)});
+        const recognition_data_players_red  = await this.recognition_worker.recognize(grayscale_64, {rectangle: this.convert_rectangle(recognition_bounds.image_players_red)});
+        const recognition_data_players_blue = await this.recognition_worker.recognize(grayscale_64, {rectangle: this.convert_rectangle(recognition_bounds.image_players_blue)});
         await this.recognition_worker.setParameters({tessedit_char_whitelist: "0123456789"});
-        const recognition_data_scoreboard_red  = await this.recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_scoreboard_red)});
-        const recognition_data_scoreboard_blue = await this.recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_scoreboard_blue)});
+        const recognition_data_scoreboard_red  = await this.recognition_worker.recognize(grayscale_240, {rectangle: this.convert_rectangle(recognition_bounds.image_scoreboard_red)});
+        const recognition_data_scoreboard_blue = await this.recognition_worker.recognize(grayscale_240, {rectangle: this.convert_rectangle(recognition_bounds.image_scoreboard_blue)});
         // read timer
         await this.recognition_worker.setParameters({tessedit_char_whitelist: "0123456789:"});
-        const recognition_data_timer = await this.recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_timer)});
+        const recognition_data_timer = await this.recognition_worker.recognize(grayscale_64, {rectangle: this.convert_rectangle(recognition_bounds.image_timer)});
         // read score
         await this.recognition_worker.setParameters({tessedit_char_whitelist: "0123456789"});
-        const recognition_data_score_red  = await this.recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_score_red)});
-        const recognition_data_score_blue = await this.recognition_worker.recognize(recognition_image, {rectangle: this.convert_rectangle(recognition_bounds.image_score_blue)});
+        const recognition_data_score_red  = await this.recognition_worker.recognize(grayscale_64, {rectangle: this.convert_rectangle(recognition_bounds.image_score_red)});
+        const recognition_data_score_blue = await this.recognition_worker.recognize(grayscale_64, {rectangle: this.convert_rectangle(recognition_bounds.image_score_blue)});
         // raw results
         const round_timer  = this.recognize_timer  (recognition_data_timer       .data.text);
         const score_red    = this.recognize_score  (recognition_data_score_red   .data.text);

@@ -9,6 +9,8 @@ import { string_limit } from "../utilities/util_render";
 
 export default class RateCommand extends VerificationCommand {
 
+    private static MAX_TEAM_PLAYERS = 7;
+
     public command_configuration(): SlashCommandBuilder {
         const command_builder = new SlashCommandBuilder()
             .setName("rate")
@@ -54,7 +56,7 @@ export default class RateCommand extends VerificationCommand {
             await command_interaction.editReply({embeds: [invalid_embed]});
             return;
         }
-        const round_result = await Backend.server_worker.recognize_image(manager_image.image_grayscale(), round_bounds);
+        const round_result = await Backend.server_worker.recognize_image(manager_image, round_bounds);
         if (!round_result.round_valid) {
             // invalid screenshot
             const invalid_embed = new EmbedBuilder()
@@ -109,12 +111,12 @@ export default class RateCommand extends VerificationCommand {
                 },
                 {
                     name: "🟥 Team Red",
-                    value: "** **\n" + round_result.players_red.map((team_player, player_index) => this.player_summary(team_player, round_rating.players_red[player_index])).join("\n\n"),
+                    value: "** **\n" + round_result.players_red.slice(0, Math.min(round_result.players_red.length, RateCommand.MAX_TEAM_PLAYERS)).map((team_player, player_index) => this.player_summary(team_player, round_rating.players_red[player_index])).join("\n\n"),
                     inline: true
                 },
                 {
                     name: "🟦 Team Blue",
-                    value: "** **\n" + round_result.players_blue.map((team_player, player_index) => this.player_summary(team_player, round_rating.players_blue[player_index])).join("\n\n"),
+                    value: "** **\n" + round_result.players_blue.slice(0, Math.min(round_result.players_blue.length, RateCommand.MAX_TEAM_PLAYERS)).map((team_player, player_index) => this.player_summary(team_player, round_rating.players_blue[player_index])).join("\n\n"),
                     inline: true
                 }
             ])
@@ -129,7 +131,7 @@ export default class RateCommand extends VerificationCommand {
         return `${Math.floor(round_seconds / 60)}m ${round_seconds % 60}s`;
     }
 
-    private player_summary(player_stats: RecognitionPlayer, player_rating: RatingPlayer): string {
+    private player_summary(player_stats: RecognitionPlayer, player_rating: RatingPlayer, line_limit: number = 125): string {
         // player rating trend
         const player_rating_old   = (player_rating.player_rating_old ? expose(player_rating.player_rating_old) : 0);
         const player_rating_new   = (player_rating.player_rating_new ? expose(player_rating.player_rating_new) : 0);
@@ -139,7 +141,7 @@ export default class RateCommand extends VerificationCommand {
         // player kdr
         const player_display = string_limit(player_stats.player_username, 12, "…")
         const player_kdr     = ((player_stats.player_deaths > 0) ? (player_stats.player_kills / player_stats.player_deaths) : player_stats.player_kills);
-        return [
+        const player_summary = [
             (() => {
                 if      (player_stats.player_bot)     return `🤖 **${player_display}**`;
                 else if (player_stats.player_partial) return `❌ **${player_display}**`;
@@ -151,6 +153,14 @@ export default class RateCommand extends VerificationCommand {
                 else                                  return `<:db:1377733347677306980> Rating: \`${player_rating_old.toFixed(2)}\` ➤ \`${player_rating_new.toFixed(2)}\` ${player_rating_trend}`;
             })(),
             `<:db:1377733347677306980> Score: \`${player_stats.player_score}\` KDR: \`${player_kdr.toFixed(1)}\``
-        ].join("\n");
+        ];
+        while (true) {
+            const summary_total = player_summary.join("\n");
+            if (summary_total.length > line_limit) {
+                player_summary.pop();
+                continue;
+            }
+            return summary_total;
+        }
     }
 }

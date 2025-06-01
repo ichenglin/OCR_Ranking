@@ -132,7 +132,7 @@ export class ImageManager {
         return Object.assign(image_bounds_raw, {image_valid: image_bounds_valid});
     }
 
-    public image_grayscale(): Buffer {
+    public image_grayscale(luminance_threshold: number): Buffer {
         // create grayscale image
         const grayscale_data = this.image_context.getImageData(0, 0, this.image_canvas.width, this.image_canvas.height);
         for (let pixel_index = 0; pixel_index < (grayscale_data.data.length / 4); pixel_index++) {
@@ -141,7 +141,7 @@ export class ImageManager {
             const pixel_blue  = grayscale_data.data[(pixel_index * 4) + 2];
             // relative luminance
             const pixel_luminance = Math.floor((pixel_red * 0.2126) + (pixel_green * 0.7152) + (pixel_blue * 0.0722));
-            const pixel_binary    = ((pixel_luminance >= 64) ? 255 : 0);
+            const pixel_binary    = ((pixel_luminance >= luminance_threshold) ? 255 : 0);
             grayscale_data.data[(pixel_index * 4) + 0] = pixel_binary;
             grayscale_data.data[(pixel_index * 4) + 1] = pixel_binary;
             grayscale_data.data[(pixel_index * 4) + 2] = pixel_binary;
