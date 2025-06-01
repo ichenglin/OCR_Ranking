@@ -135,9 +135,6 @@ export default class RateCommand extends VerificationCommand {
         // player rating trend
         const player_rating_old   = (player_rating.player_rating_old ? expose(player_rating.player_rating_old) : 0);
         const player_rating_new   = (player_rating.player_rating_new ? expose(player_rating.player_rating_new) : 0);
-        let   player_rating_trend = "";
-             if (player_rating_new > player_rating_old) player_rating_trend = "(🔺)";
-        else if (player_rating_new < player_rating_old) player_rating_trend = "(🔻)";
         // player kdr
         const player_display = string_limit(player_stats.player_username, 12, "…")
         const player_kdr     = ((player_stats.player_deaths > 0) ? (player_stats.player_kills / player_stats.player_deaths) : player_stats.player_kills);
@@ -150,7 +147,7 @@ export default class RateCommand extends VerificationCommand {
             (() => {
                 if      (player_stats.player_bot)     return "<:db:1377733347677306980> Rating: \`Not Updated\` (**NPC**)";
                 else if (player_stats.player_partial) return "<:db:1377733347677306980> Rating: \`Not Updated\` (**PRT**)";
-                else                                  return `<:db:1377733347677306980> Rating: \`${player_rating_old.toFixed(2)}\` ➤ \`${player_rating_new.toFixed(2)}\` ${player_rating_trend}`;
+                else                                  return `<:db:1377733347677306980> Rating: \`${player_rating_old.toFixed(2)}\` ➤ \`${player_rating_new.toFixed(2)}\``;
             })(),
             `<:db:1377733347677306980> Score: \`${player_stats.player_score}\` KDR: \`${player_kdr.toFixed(1)}\``
         ];
