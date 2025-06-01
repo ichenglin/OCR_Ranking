@@ -49,30 +49,30 @@ export class ImageManager {
         const scoreboard_top = PixelSearcher.search_until(this.image_canvas, {
             location_x: image_width_center,
             location_y: Math.floor(image_height * (1/4))
-        }, PixelSearcherDirection.SEARCH_TOP, ImageManager.SCOREBOARD_BORDER, true).pixel_origin().location_y;
+        }, PixelSearcherDirection.SEARCH_TOP, ImageManager.SCOREBOARD_BORDER, true, 0).pixel_origin().location_y;
         const scoreboard_bottom = PixelSearcher.search_until(this.image_canvas, {
             location_x: image_width_center,
             location_y: Math.floor(image_height * (3/4))
-        }, PixelSearcherDirection.SEARCH_BOTTOM, ImageManager.SCOREBOARD_BORDER, true).pixel_origin().location_y;
+        }, PixelSearcherDirection.SEARCH_BOTTOM, ImageManager.SCOREBOARD_BORDER, true, 0).pixel_origin().location_y;
         const scoreboard_right = PixelSearcher.search_until(this.image_canvas, {
             location_x: image_width_center,
             location_y: Math.floor(image_height * (3/4))
-        }, PixelSearcherDirection.SEARCH_RIGHT, ImageManager.SCOREBOARD_BORDER, true).pixel_origin().location_x;
+        }, PixelSearcherDirection.SEARCH_RIGHT, ImageManager.SCOREBOARD_BORDER, true, 0).pixel_origin().location_x;
         const scoreboard_left   = ((image_width - 1) - scoreboard_right);
         const scoreboard_center = Math.floor((scoreboard_top + scoreboard_bottom) / 2);
         // search timer
         const timer_top = PixelSearcher.search_until(this.image_canvas, {
             location_x: image_width_center,
             location_y: 0
-        }, PixelSearcherDirection.SEARCH_BOTTOM, ImageManager.TIMER_BACKGROUND_TOP, true).pixel_origin().location_y + (1);
+        }, PixelSearcherDirection.SEARCH_BOTTOM, ImageManager.TIMER_BACKGROUND_TOP, true, 0).pixel_origin().location_y + (1);
         const timer_right = PixelSearcher.search_until(this.image_canvas, {
             location_x: image_width_center,
             location_y: timer_top
-        }, PixelSearcherDirection.SEARCH_RIGHT, ImageManager.TIMER_BACKGROUND_TOP, false).pixel_origin().location_x;
+        }, PixelSearcherDirection.SEARCH_RIGHT, ImageManager.TIMER_BACKGROUND_TOP, false, 0).pixel_origin().location_x;
         const timer_bottom = PixelSearcher.search_until(this.image_canvas, {
             location_x: timer_right,
             location_y: timer_top
-        }, PixelSearcherDirection.SEARCH_BOTTOM, ImageManager.TIMER_BORDER, true).pixel_origin().location_y;
+        }, PixelSearcherDirection.SEARCH_BOTTOM, ImageManager.TIMER_BORDER, true, 0).pixel_origin().location_y;
         const timer_left  = ((image_width - 1) - timer_right);
         const timer_width = (timer_right - timer_left + 1);
         // search red score
@@ -80,15 +80,15 @@ export class ImageManager {
             location_x: (image_width_center - timer_width),
             location_y: timer_top
         } as ImageLocation;
-        const score_red_left  = PixelSearcher.search_unmatch(this.image_canvas, score_red_ceil, PixelSearcherDirection.SEARCH_LEFT) .pixel_origin().location_x;
-        const score_red_right = PixelSearcher.search_unmatch(this.image_canvas, score_red_ceil, PixelSearcherDirection.SEARCH_RIGHT).pixel_origin().location_x;
+        const score_red_left  = PixelSearcher.search_unmatch(this.image_canvas, score_red_ceil, PixelSearcherDirection.SEARCH_LEFT,  5).pixel_origin().location_x;
+        const score_red_right = PixelSearcher.search_unmatch(this.image_canvas, score_red_ceil, PixelSearcherDirection.SEARCH_RIGHT, 5).pixel_origin().location_x;
         // search blue score
         const score_blue_ceil = {
             location_x: (image_width_center + timer_width),
             location_y: timer_top
         } as ImageLocation;
-        const score_blue_left  = PixelSearcher.search_unmatch(this.image_canvas, score_blue_ceil, PixelSearcherDirection.SEARCH_LEFT) .pixel_origin().location_x;
-        const score_blue_right = PixelSearcher.search_unmatch(this.image_canvas, score_blue_ceil, PixelSearcherDirection.SEARCH_RIGHT).pixel_origin().location_x;
+        const score_blue_left  = PixelSearcher.search_unmatch(this.image_canvas, score_blue_ceil, PixelSearcherDirection.SEARCH_LEFT,  5).pixel_origin().location_x;
+        const score_blue_right = PixelSearcher.search_unmatch(this.image_canvas, score_blue_ceil, PixelSearcherDirection.SEARCH_RIGHT, 5).pixel_origin().location_x;
         const image_bounds_raw = {
             image_players_red: {
                 origin:      {location_x: scoreboard_left,    location_y: scoreboard_top}    as ImageLocation,

@@ -26,7 +26,7 @@ export class PixelSearcher {
         this.image_origin = image_origin;
     }
 
-    public pixel_until(search_direction: PixelSearcherDirection, search_target: PixelColor, search_match: boolean): PixelSearcher {
+    public pixel_until(search_direction: PixelSearcherDirection, search_target: PixelColor, search_match: boolean, color_tolerance: number): PixelSearcher {
         // get direction offset
         const origin_offset  = PixelSearcher.SEARCHER_DIRECTION_OFFSET[search_direction];
         let   origin_current = this.image_origin;
@@ -40,7 +40,7 @@ export class PixelSearcher {
             if (!next_valid) break;
             // check match
             const next_color = this.pixel_color(next_location);
-            const next_match = this.pixel_match(search_target, next_color);
+            const next_match = this.pixel_match(search_target, next_color, color_tolerance);
             if (search_match === next_match) break;
             origin_current = next_location;
         }
@@ -62,11 +62,11 @@ export class PixelSearcher {
         } as PixelColor;
     }
 
-    private pixel_match(color_a: PixelColor, color_b: PixelColor): boolean {
-        if (color_a.pixel_red   != color_b.pixel_red)   return false;
-        if (color_a.pixel_green != color_b.pixel_green) return false;
-        if (color_a.pixel_blue  != color_b.pixel_blue)  return false;
-        if (color_a.pixel_alpha != color_b.pixel_alpha) return false;
+    private pixel_match(color_a: PixelColor, color_b: PixelColor, color_tolerance: number): boolean {
+        if (Math.abs(color_b.pixel_red   - color_a.pixel_red)   > color_tolerance) return false;
+        if (Math.abs(color_b.pixel_green - color_a.pixel_green) > color_tolerance) return false;
+        if (Math.abs(color_b.pixel_blue  - color_a.pixel_blue)  > color_tolerance) return false;
+        if (Math.abs(color_b.pixel_alpha - color_a.pixel_alpha) > color_tolerance) return false;
         return true;
     }
 
@@ -80,15 +80,15 @@ export class PixelSearcher {
         return true;
     }
 
-    public static search_until(image_canvas: Canvas, image_origin: ImageLocation, search_direction: PixelSearcherDirection, search_target: PixelColor, search_match: boolean): PixelSearcher {
+    public static search_until(image_canvas: Canvas, image_origin: ImageLocation, search_direction: PixelSearcherDirection, search_target: PixelColor, search_match: boolean, color_tolerance: number): PixelSearcher {
         const searcher_object = new PixelSearcher(image_canvas, image_origin);
-        return searcher_object.pixel_until(search_direction, search_target, search_match);
+        return searcher_object.pixel_until(search_direction, search_target, search_match, color_tolerance);
     }
 
-    public static search_unmatch(image_canvas: Canvas, image_origin: ImageLocation, search_direction: PixelSearcherDirection): PixelSearcher {
+    public static search_unmatch(image_canvas: Canvas, image_origin: ImageLocation, search_direction: PixelSearcherDirection, color_tolerance: number): PixelSearcher {
         const searcher_object = new PixelSearcher(image_canvas, image_origin);
         const searcher_target = searcher_object.pixel_color(image_origin);
-        return searcher_object.pixel_until(search_direction, searcher_target, false);
+        return searcher_object.pixel_until(search_direction, searcher_target, false, color_tolerance);
     }
 }
 

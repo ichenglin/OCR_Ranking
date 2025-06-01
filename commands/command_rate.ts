@@ -46,7 +46,7 @@ export default class RateCommand extends VerificationCommand {
             // invalid screenshot
             const invalid_embed = new EmbedBuilder()
                 .setTitle("⛔ Invalid Screenshot ⛔")
-                .setDescription("The image **could not be processed**. Please retake the screenshot and make sure the **round timer, team score, and scoreboard** is fully **visible and unobstructed**.")
+                .setDescription("The image **could not be processed**. Please retake the screenshot and make sure the **round timer, team score, and scoreboard** is fully **visible and unobstructed**. \`(ERR_REC_BDS)\`")
                 .setImage(image_url)
                 .setTimestamp()
                 .setFooter({text: `requested by ${command_interaction.user.tag}`, iconURL: command_interaction.client.user.displayAvatarURL()})
@@ -59,7 +59,7 @@ export default class RateCommand extends VerificationCommand {
             // invalid screenshot
             const invalid_embed = new EmbedBuilder()
                 .setTitle("⛔ Invalid Screenshot ⛔")
-                .setDescription("The image **could not be processed**. Please retake the screenshot and make sure the **round timer, team score, and scoreboard** is fully **visible and unobstructed**.")
+                .setDescription("The image **could not be processed**. Please retake the screenshot and make sure the **round timer, team score, and scoreboard** is fully **visible and unobstructed**. \`(ERR_REC_CTX)\`")
                 .setImage(image_url)
                 .setTimestamp()
                 .setFooter({text: `requested by ${command_interaction.user.tag}`, iconURL: command_interaction.client.user.displayAvatarURL()})
