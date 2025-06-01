@@ -88,18 +88,18 @@ export default class RateCommand extends VerificationCommand {
                 {
                     name: "⌛ Round Information",
                     value: [
-                        `<:dot_blue:1377733347677306980> Timer: \`${this.round_timer(round_result.round_timer)}\``,
-                        `<:dot_blue:1377733347677306980> Red Score: \`${round_result.score_red} pts\` ${(round_result.score_red > round_result.score_blue) ? "(🏅)" : ""}`,
-                        `<:dot_blue:1377733347677306980> Blue Score: \`${round_result.score_blue} pts\` ${(round_result.score_red < round_result.score_blue) ? "(🏅)" : ""}`
+                        `<:db:1377733347677306980> Timer: \`${this.round_timer(round_result.round_timer)}\``,
+                        `<:db:1377733347677306980> Red Score: \`${round_result.score_red} pts\` ${(round_result.score_red > round_result.score_blue) ? "(🏅)" : ""}`,
+                        `<:db:1377733347677306980> Blue Score: \`${round_result.score_blue} pts\` ${(round_result.score_red < round_result.score_blue) ? "(🏅)" : ""}`
                     ].join("\n"),
                     inline: true
                 },
                 {
                     name: "🎯 Round Likelihood",
                     value: [
-                        `<:dot_blue:1377733347677306980> Quality: \`${(round_rating.probability.quality * 100).toFixed(1)}%\``,
-                        `<:dot_blue:1377733347677306980> Red Win: \`${(round_rating.probability.win_red * 100).toFixed(1)}%\``,
-                        `<:dot_blue:1377733347677306980> Blue Win: \`${(round_rating.probability.win_blue * 100).toFixed(1)}%\``
+                        `<:db:1377733347677306980> Quality: \`${(round_rating.probability.quality * 100).toFixed(1)}%\``,
+                        `<:db:1377733347677306980> Red Win: \`${(round_rating.probability.win_red * 100).toFixed(1)}%\``,
+                        `<:db:1377733347677306980> Blue Win: \`${(round_rating.probability.win_blue * 100).toFixed(1)}%\``
                     ].join("\n"),
                     inline: true
                 },
@@ -131,8 +131,8 @@ export default class RateCommand extends VerificationCommand {
 
     private player_summary(player_stats: RecognitionPlayer, player_rating: RatingPlayer): string {
         // player rating trend
-        const player_rating_old   = expose(player_rating.player_rating_old);
-        const player_rating_new   = expose(player_rating.player_rating_new);
+        const player_rating_old   = (player_rating.player_rating_old ? expose(player_rating.player_rating_old) : 0);
+        const player_rating_new   = (player_rating.player_rating_new ? expose(player_rating.player_rating_new) : 0);
         let   player_rating_trend = "";
              if (player_rating_new > player_rating_old) player_rating_trend = "(🔺)";
         else if (player_rating_new < player_rating_old) player_rating_trend = "(🔻)";
@@ -140,11 +140,17 @@ export default class RateCommand extends VerificationCommand {
         const player_display = string_limit(player_stats.player_username, 12, "…")
         const player_kdr     = ((player_stats.player_deaths > 0) ? (player_stats.player_kills / player_stats.player_deaths) : player_stats.player_kills);
         return [
-            player_stats.player_bot || `🪖 **${player_display}**`,
-            player_stats.player_bot && `🤖 **${player_display}**`,
-            player_stats.player_bot || `<:dot_blue:1377733347677306980> Rating: \`${player_rating_old.toFixed(2)}\` ➤ \`${player_rating_new.toFixed(2)}\` ${player_rating_trend}`,
-            player_stats.player_bot && `<:dot_blue:1377733347677306980> Rating: \`Not Updated\` (**NPC**)`,
-            `<:dot_blue:1377733347677306980> Score: \`${player_stats.player_score}\` KDR: \`${player_kdr.toFixed(1)}\``
-        ].filter(summary_line => ((typeof summary_line) === "string")).join("\n");
+            (() => {
+                if      (player_stats.player_bot)     return `🤖 **${player_display}**`;
+                else if (player_stats.player_partial) return `❌ **${player_display}**`;
+                else                                  return `🪖 **${player_display}**`;
+            })(),
+            (() => {
+                if      (player_stats.player_bot)     return "<:db:1377733347677306980> Rating: \`Not Updated\` (**NPC**)";
+                else if (player_stats.player_partial) return "<:db:1377733347677306980> Rating: \`Not Updated\` (**PRT**)";
+                else                                  return `<:db:1377733347677306980> Rating: \`${player_rating_old.toFixed(2)}\` ➤ \`${player_rating_new.toFixed(2)}\` ${player_rating_trend}`;
+            })(),
+            `<:db:1377733347677306980> Score: \`${player_stats.player_score}\` KDR: \`${player_kdr.toFixed(1)}\``
+        ].join("\n");
     }
 }

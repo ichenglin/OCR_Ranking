@@ -86,6 +86,7 @@ export class RecognitionManager {
                 player_kills:    player_stats[1],
                 player_deaths:   player_stats[2],
                 player_streak:   player_stats[3],
+                player_partial:  ((player_stats[1] + player_stats[2]) < 10),
                 player_bot:      (player_match && (player_level < 20))
             } as RecognitionPlayer;
         });
@@ -117,5 +118,6 @@ export type RecognitionPlayer = {
     player_kills:    number,
     player_deaths:   number,
     player_streak:   number,
+    player_partial:  boolean,
     player_bot:      boolean
 };

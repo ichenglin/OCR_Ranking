@@ -9,8 +9,8 @@ export class RatingManager {
             RatingManager.rating_get(round_result.players_red),
             RatingManager.rating_get(round_result.players_blue)
         ]);
-        const rating_red         = player_data[0].map(loop_data => loop_data.rating);
-        const rating_blue        = player_data[1].map(loop_data => loop_data.rating);
+        const rating_red         = player_data[0].filter((_, loop_index) => (!round_result.players_red [loop_index].player_partial)).map(loop_data => loop_data.rating);
+        const rating_blue        = player_data[1].filter((_, loop_index) => (!round_result.players_blue[loop_index].player_partial)).map(loop_data => loop_data.rating);
         const likelihood_quality = quality       ([rating_red,  rating_blue]);
         const likelihood_red     = win_probability(rating_red,  rating_blue);
         const likelihood_blue    = win_probability(rating_blue, rating_red);
@@ -30,17 +30,24 @@ export class RatingManager {
         else if (round_result.score_red < round_result.score_blue) rating_ranks = [1, 0];
         // calculate and save new ratings to database
         const round_likelihood = await RatingManager.rating_likelihood(round_result);
-        const rating_red       = round_likelihood.players_red .map(loop_data => loop_data.rating);
-        const rating_blue      = round_likelihood.players_blue.map(loop_data => loop_data.rating);
+        const recognition_red  = round_result    .players_red .filter((_, loop_index) => (!round_result.players_red [loop_index].player_partial));
+        const recognition_blue = round_result    .players_blue.filter((_, loop_index) => (!round_result.players_blue[loop_index].player_partial));
+        const players_red      = round_likelihood.players_red .filter((_, loop_index) => (!round_result.players_red [loop_index].player_partial));
+        const players_blue     = round_likelihood.players_blue.filter((_, loop_index) => (!round_result.players_blue[loop_index].player_partial));
+        const partial_red      = round_likelihood.players_red .filter((_, loop_index) =>   round_result.players_red [loop_index].player_partial);
+        const partial_blue     = round_likelihood.players_blue.filter((_, loop_index) =>   round_result.players_blue[loop_index].player_partial);
+        const rating_red       = players_red .map(loop_data => loop_data.rating);
+        const rating_blue      = players_blue.map(loop_data => loop_data.rating);
         const rating_new       = rate([rating_red, rating_blue], rating_ranks);
         const rating_updated   = await Promise.all([
-            RatingManager.rating_set(round_result.players_red,  rating_new[0]),
-            RatingManager.rating_set(round_result.players_blue, rating_new[1]),
+            RatingManager.rating_set(recognition_red,  rating_new[0]),
+            RatingManager.rating_set(recognition_blue, rating_new[1]),
         ]);
+        // WARNING: players_red/players_blue does NOT guarantee to return in recognition order
         return {
             probability:   round_likelihood,
-            players_red:   RatingManager.rating_package(rating_updated[0], rating_red,  rating_new[0]),
-            players_blue:  RatingManager.rating_package(rating_updated[1], rating_blue, rating_new[1]),
+            players_red:   [...RatingManager.rating_package(rating_updated[0], rating_red,  rating_new[0]), ...RatingManager.rating_partial(partial_red)],
+            players_blue:  [...RatingManager.rating_package(rating_updated[1], rating_blue, rating_new[1]), ...RatingManager.rating_partial(partial_blue)],
         };
     }
 
@@ -78,6 +85,14 @@ export class RatingManager {
             player_rating_new: rating_new[loop_index]
         } as RatingPlayer));
     }
+
+    private static rating_partial(player_data: DatabasePlayer[]): RatingPlayer[] {
+        return player_data.map((loop_player) => ({
+            player_data:       loop_player,
+            player_rating_old: (undefined as any), // shouldn't be used
+            player_rating_new: (undefined as any)  // shouldn't be used
+        } as RatingPlayer));
+    }
 }
 
 export interface RatingResult {
@@ -95,7 +110,7 @@ export type RatingProbability = {
 };
 
 export type RatingPlayer = {
-    player_data:       DatabasePlayer,
-    player_rating_old: Rating,
-    player_rating_new: Rating
+    player_data:        DatabasePlayer,
+    player_rating_old?: Rating,
+    player_rating_new?: Rating
 };
