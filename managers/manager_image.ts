@@ -58,8 +58,9 @@ export class ImageManager {
             location_x: image_width_center,
             location_y: Math.floor(image_height * (3/4))
         }, PixelSearcherDirection.SEARCH_RIGHT, ImageManager.SCOREBOARD_BORDER, true, 0).pixel_origin().location_x;
-        const scoreboard_left   = ((image_width - 1) - scoreboard_right);
-        const scoreboard_center = Math.floor((scoreboard_top + scoreboard_bottom) / 2);
+        const scoreboard_left    = ((image_width - 1) - scoreboard_right);
+        const scoreboard_center  = Math.floor((scoreboard_top + scoreboard_bottom) / 2);
+        const scoreboard_quarter = ((scoreboard_right - image_width_center) / 4);
         // search timer
         const timer_top = PixelSearcher.search_until(this.image_canvas, {
             location_x: image_width_center,
@@ -99,12 +100,12 @@ export class ImageManager {
                 destination: {location_x: image_width_center, location_y: scoreboard_bottom} as ImageLocation
             },
             image_scoreboard_red: {
-                origin:      {location_x: image_width_center, location_y: scoreboard_top}    as ImageLocation,
-                destination: {location_x: scoreboard_right,   location_y: scoreboard_center} as ImageLocation
+                origin:      {location_x: image_width_center + scoreboard_quarter, location_y: scoreboard_top}    as ImageLocation,
+                destination: {location_x: scoreboard_right   - scoreboard_quarter, location_y: scoreboard_center} as ImageLocation
             },
             image_scoreboard_blue: {
-                origin:      {location_x: image_width_center, location_y: scoreboard_center} as ImageLocation,
-                destination: {location_x: scoreboard_right,   location_y: scoreboard_bottom} as ImageLocation
+                origin:      {location_x: image_width_center + scoreboard_quarter, location_y: scoreboard_center} as ImageLocation,
+                destination: {location_x: scoreboard_right   - scoreboard_quarter, location_y: scoreboard_bottom} as ImageLocation
             },
             image_timer: {
                 origin:      {location_x: timer_left,  location_y: timer_top}    as ImageLocation,
