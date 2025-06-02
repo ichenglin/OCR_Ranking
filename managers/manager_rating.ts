@@ -11,7 +11,8 @@ export class RatingManager {
         ]);
         const rating_red         = player_data[0].filter((_, loop_index) => (!round_result.players_red [loop_index].player_partial)).map(loop_data => loop_data.rating);
         const rating_blue        = player_data[1].filter((_, loop_index) => (!round_result.players_blue[loop_index].player_partial)).map(loop_data => loop_data.rating);
-        const likelihood_quality = quality       ([rating_red,  rating_blue]);
+        const rating_valid       = ((rating_red.length > 0) && (rating_blue.length > 0));
+        const likelihood_quality = (rating_valid ? quality([rating_red,  rating_blue]) : 0);
         const likelihood_red     = win_probability(rating_red,  rating_blue);
         const likelihood_blue    = win_probability(rating_blue, rating_red);
         return {
@@ -23,7 +24,7 @@ export class RatingManager {
         };
     }
 
-    public static async rating_update(round_result: RecognitionResult): Promise<RatingResult> {
+    public static async rating_update(round_result: RecognitionResult, rating_save: boolean): Promise<RatingResult> {
         // calculate rating ranks
         let rating_ranks = [0, 0];
         if      (round_result.score_red > round_result.score_blue) rating_ranks = [0, 1];
@@ -38,10 +39,24 @@ export class RatingManager {
         const partial_blue     = round_likelihood.players_blue.filter((_, loop_index) =>   round_result.players_blue[loop_index].player_partial);
         const rating_red       = players_red .map(loop_data => loop_data.rating);
         const rating_blue      = players_blue.map(loop_data => loop_data.rating);
+        // not enough ratings on each team
+        if ((rating_red.length <= 0) || (rating_blue.length <= 0)) return {
+            probability:   round_likelihood,
+            players_red:   [...players_red .map(player_data => ({
+                player_data:       player_data,
+                player_rating_old: player_data.rating,
+                player_rating_new: player_data.rating
+            })), ...RatingManager.rating_partial(partial_red)],
+            players_blue:  [...players_blue.map(player_data => ({
+                player_data:       player_data,
+                player_rating_old: player_data.rating,
+                player_rating_new: player_data.rating
+            })), ...RatingManager.rating_partial(partial_blue)],
+        };
         const rating_new       = rate([rating_red, rating_blue], rating_ranks);
         const rating_updated   = await Promise.all([
-            RatingManager.rating_set(recognition_red,  players_red,  rating_new[0]),
-            RatingManager.rating_set(recognition_blue, players_blue, rating_new[1]),
+            RatingManager.rating_set(recognition_red,  players_red,  rating_new[0], rating_save),
+            RatingManager.rating_set(recognition_blue, players_blue, rating_new[1], rating_save),
         ]);
         // WARNING: players_red/players_blue does NOT guarantee to return in recognition order
         return {
@@ -66,9 +81,9 @@ export class RatingManager {
         })));
     }
 
-    private static async rating_set(recognition_players: RecognitionPlayer[], database_players: DatabasePlayer[], team_rating: Rating[]): Promise<DatabasePlayer[]> {
+    private static async rating_set(recognition_players: RecognitionPlayer[], database_players: DatabasePlayer[], team_rating: Rating[], rating_save: boolean): Promise<DatabasePlayer[]> {
         return await Promise.all(recognition_players.map((player_data, player_index) => {
-            if (player_data.player_bot) return {
+            if ((!rating_save) || player_data.player_bot) return {
                 username: player_data.player_username,
                 key:      player_data.player_username.toLowerCase(),
                 level:    player_data.player_level,
