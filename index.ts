@@ -31,7 +31,8 @@ const Backend = {
     Backend.server_registry.register([
         new InteractionCreateEvent(),
         new (await import("./commands/command_rate")).default(),
-        new (await import("./commands/command_try")).default()
+        new (await import("./commands/command_try")).default(),
+        new (await import("./commands/command_player")).default()
     ]);
     // hook signatures
     for (const event_signature of Backend.server_registry.event_signatures()) Backend.server_client.on(event_signature.event_configuration().name, async (...args) => await event_signature.event_trigger(...args));
