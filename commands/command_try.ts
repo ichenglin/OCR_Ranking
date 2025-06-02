@@ -70,7 +70,7 @@ export default class TryCommand extends VerificationCommand {
             player_kills:    0,
             player_deaths:   0,
             player_streak:   0,
-            player_partial:  true,
+            player_partial:  false,
             player_bot:      false
         } as RecognitionPlayer));
     }
