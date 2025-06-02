@@ -40,8 +40,8 @@ export class RatingManager {
         const rating_blue      = players_blue.map(loop_data => loop_data.rating);
         const rating_new       = rate([rating_red, rating_blue], rating_ranks);
         const rating_updated   = await Promise.all([
-            RatingManager.rating_set(recognition_red,  rating_new[0]),
-            RatingManager.rating_set(recognition_blue, rating_new[1]),
+            RatingManager.rating_set(recognition_red,  players_red,  rating_new[0]),
+            RatingManager.rating_set(recognition_blue, players_blue, rating_new[1]),
         ]);
         // WARNING: players_red/players_blue does NOT guarantee to return in recognition order
         return {
@@ -52,29 +52,33 @@ export class RatingManager {
     }
 
     private static async rating_get(team_players: RecognitionPlayer[]): Promise<DatabasePlayer[]> {
-        const team_usernames = team_players.map(player_data => player_data.player_username);
-        return await Promise.all(team_usernames.map(round_username => get_player(round_username).then(player_data => {
+        return await Promise.all(team_players.map(round_player => get_player(round_player.player_username).then(player_data => {
             return ((player_data !== null) ? player_data : {
-                username: round_username,
-                key:      round_username.toLowerCase(),
-                level:    0,
+                username: round_player.player_username,
+                key:      round_player.player_username.toLowerCase(),
+                level:    round_player.player_level,
                 rating:   new Rating(),
                 updates:  0,
                 updated:  new Date(),
-                valid:    false
+                valid:    false,
+                verified: false
             });
         })));
     }
 
-    private static async rating_set(team_players: RecognitionPlayer[], team_rating: Rating[]): Promise<DatabasePlayer[]> {
-        return await Promise.all(team_players.map((player_data, player_index) => {
+    private static async rating_set(recognition_players: RecognitionPlayer[], database_players: DatabasePlayer[], team_rating: Rating[]): Promise<DatabasePlayer[]> {
+        return await Promise.all(recognition_players.map((player_data, player_index) => {
             if (player_data.player_bot) return {
                 username: player_data.player_username,
+                key:      player_data.player_username.toLowerCase(),
                 level:    player_data.player_level,
                 rating:   team_rating[player_index],
-                updated:  new Date()
+                updates:  0,
+                updated:  new Date(),
+                valid:    false,
+                verified: false
             } as DatabasePlayer;
-            return set_player(player_data.player_username, player_data.player_level, team_rating[player_index]);
+            return set_player(player_data, database_players[player_index], team_rating[player_index]);
         }));
     }
 

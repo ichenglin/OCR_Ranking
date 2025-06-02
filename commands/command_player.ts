@@ -41,6 +41,7 @@ export default class PlayerCommand extends VerificationCommand {
                     name: "🪪 Information",
                     value: [
                         `<:db:1377733347677306980> Level: \`${player_rating.level}\``,
+                        `<:db:1377733347677306980> Verified: \`${player_rating.verified ? "Yes" : "No"}\``,
                         `<:db:1377733347677306980> Updated: \`${player_rating.updated.toDateString()}\``
                     ].join("\n"),
                     inline: true

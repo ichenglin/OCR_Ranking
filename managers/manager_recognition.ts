@@ -1,5 +1,7 @@
 import Tesseract, { createWorker } from "tesseract.js";
+import { distance } from "fastest-levenshtein";
 import { ImageArea, ImageBounds, ImageManager } from "./manager_image";
+import { DatabasePlayer, get_verified } from "../utilities/util_database";
 
 export class RecognitionManager {
     private recognition_worker: Tesseract.Worker;
@@ -35,12 +37,13 @@ export class RecognitionManager {
         const recognition_data_score_red  = await this.recognition_worker.recognize(grayscale_64, {rectangle: this.convert_rectangle(recognition_bounds.image_score_red)});
         const recognition_data_score_blue = await this.recognition_worker.recognize(grayscale_64, {rectangle: this.convert_rectangle(recognition_bounds.image_score_blue)});
         // raw results
-        const round_timer  = this.recognize_timer  (recognition_data_timer       .data.text);
-        const score_red    = this.recognize_score  (recognition_data_score_red   .data.text);
-        const score_blue   = this.recognize_score  (recognition_data_score_blue  .data.text);
-        const players_red  = this.recognize_players(recognition_data_players_red .data.text, recognition_data_scoreboard_red .data.text);
-        const players_blue = this.recognize_players(recognition_data_players_blue.data.text, recognition_data_scoreboard_blue.data.text);
-        const round_valid  = ([
+        const players_verified = await get_verified();
+        const round_timer      = this.recognize_timer  (recognition_data_timer       .data.text);
+        const score_red        = this.recognize_score  (recognition_data_score_red   .data.text);
+        const score_blue       = this.recognize_score  (recognition_data_score_blue  .data.text);
+        const players_red      = this.recognize_players(recognition_data_players_red .data.text, recognition_data_scoreboard_red .data.text, players_verified);
+        const players_blue     = this.recognize_players(recognition_data_players_blue.data.text, recognition_data_scoreboard_blue.data.text, players_verified);
+        const round_valid      = ([
             (round_timer         !== null),
             (score_red           !== null),
             (score_blue          !== null),
@@ -71,13 +74,13 @@ export class RecognitionManager {
         return parseInt(score_digits[1]);
     }
 
-    private recognize_players(recognition_players: string, recognition_scoreboard: string): RecognitionPlayer[] {
+    private recognize_players(recognition_players: string, recognition_scoreboard: string, players_verified: DatabasePlayer[]): RecognitionPlayer[] {
         const player_scoreboard = recognition_scoreboard.split("\n").map(line_text => line_text.match(/^(\d+)\s(\d+)\s(\d+)\s(\d+)$/)).map(line_match => {
             const line_stats = ((line_match !== null) ? line_match.slice(1, 5) : (new Array(4).fill("0")));
             return line_stats.map(loop_stat => parseInt(loop_stat));
         });
         return recognition_players.split("\n").map(line_text => line_text.match(/^(\w+)\([^\d]*(\d+)\)$/)).filter(line_match => (line_match !== null)).map((line_match, line_index) => {
-            const player_username = line_match[1];
+            const player_username = this.recognize_verified(line_match[1], players_verified);
             const player_level    = parseInt(line_match[2]);
             const player_match    = (player_username.match(/^[a-zA-Z\d]+_[a-zA-Z\d]+\d{4}$/) !== null);
             const player_stats    = ((line_index < player_scoreboard.length) ? player_scoreboard[line_index] : (new Array(4).fill(0) as number[]));
@@ -92,6 +95,20 @@ export class RecognitionManager {
                 player_bot:      (player_match && (player_level < 20))
             } as RecognitionPlayer;
         });
+    }
+
+    private recognize_verified(player_username: string, verified_data: DatabasePlayer[]): string {
+        // no verified candidates
+        if (verified_data.length <= 0) return player_username;
+        // exist verified candidates
+        const verified_usernames = verified_data.map(player_data => player_data.username);
+        const verified_distance  = verified_usernames.reduce((verified_best, verified_current) => {
+            const current_distance = distance(verified_current, player_username);
+            const current_better   = (current_distance < verified_best.distance);
+            return (current_better ? {username: verified_current, distance: current_distance} : verified_best);
+        }, {username: "", distance: Number.MAX_VALUE});
+        if (verified_distance.distance < 3) console.log(player_username + " -> " + verified_distance.username);
+        return ((verified_distance.distance < 3) ? verified_distance.username : player_username);
     }
 
     private convert_rectangle(image_area: ImageArea): Tesseract.Rectangle {

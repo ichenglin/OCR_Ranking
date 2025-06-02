@@ -17,7 +17,7 @@ const Backend = {
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]}),
-    server_worker:   new RecognitionManager()
+    server_worker:   (undefined as unknown as RecognitionManager)
 };
 
 (async () => {
@@ -32,7 +32,8 @@ const Backend = {
         new InteractionCreateEvent(),
         new (await import("./commands/command_rate")).default(),
         new (await import("./commands/command_try")).default(),
-        new (await import("./commands/command_player")).default()
+        new (await import("./commands/command_player")).default(),
+        new (await import("./commands/command_verify")).default()
     ]);
     // hook signatures
     for (const event_signature of Backend.server_registry.event_signatures()) Backend.server_client.on(event_signature.event_configuration().name, async (...args) => await event_signature.event_trigger(...args));
@@ -48,6 +49,7 @@ const Backend = {
         }]
     });
     // worker
+    Backend.server_worker = new (await import("./managers/manager_recognition")).RecognitionManager();
     await Backend.server_worker.recognition_init();
     Logger.send_log("Server initialization completed.");
 })();
